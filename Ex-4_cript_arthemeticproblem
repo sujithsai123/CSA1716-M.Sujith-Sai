@@ -1,0 +1,36 @@
+from itertools import permutations
+
+def solve_cryptarithmetic(puzzle):
+    
+    letters = set(char for char in puzzle if char.isalpha())
+    letters_list = list(letters)
+
+    
+    for perm in permutations(range(10), len(letters)):
+       
+        mapping = dict(zip(letters_list, perm))
+        
+       
+        expression = "".join(str(mapping.get(char, char)) for char in puzzle)
+        
+        
+        expression_no_zeros = ""
+        for token in expression.split():
+            if token.isdigit() and token[0] == '0':
+                expression_no_zeros += token[1:]
+            else:
+                expression_no_zeros += token
+            expression_no_zeros += " "
+
+        if eval(expression_no_zeros):
+            return mapping
+    return None
+
+puzzle = "SEND + MORE == MONEY"
+solution = solve_cryptarithmetic(puzzle)
+if solution:
+    print("Solution found:")
+    for letter, digit in solution.items():
+        print(f"{letter}: {digit}")
+else:
+    print("No solution found.")
