@@ -1,0 +1,104 @@
+import heapq
+
+class PuzzleState:
+    def __init__(self, board, parent=None, move=""):
+        self.board = board
+        self.parent = parent
+        self.move = move
+        self.cost = self.calculate_cost()
+
+    def __lt__(self, other):
+        return self.cost < other.cost
+
+    def __eq__(self, other):
+        return self.board == other.board
+
+    def __hash__(self):
+        return hash(str(self.board))
+
+    def find_blank(self):
+        for i in range(3):
+            for j in range(3):
+                if self.board[i][j] == 0:
+                    return i, j
+
+    def generate_successors(self):
+        successors = []
+        row, col = self.find_blank()
+
+        for move in ["UP", "DOWN", "LEFT", "RIGHT"]:
+            new_board = [row[:] for row in self.board]
+            successors.append(PuzzleState(self.make_move(new_board, move), self, move))
+
+        return successors
+
+    def make_move(self, board, direction):
+        row, col = self.find_blank()
+
+        if direction == "UP" and row > 0:
+            board[row][col], board[row - 1][col] = board[row - 1][col], board[row][col]
+        elif direction == "DOWN" and row < 2:
+            board[row][col], board[row + 1][col] = board[row + 1][col], board[row][col]
+        elif direction == "LEFT" and col > 0:
+            board[row][col], board[row][col - 1] = board[row][col - 1], board[row][col]
+        elif direction == "RIGHT" and col < 2:
+            board[row][col], board[row][col + 1] = board[row][col + 1], board[row][col]
+
+        return board
+
+    def calculate_cost(self):
+        cost = 0
+        goal_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+
+        for i in range(3):
+            for j in range(3):
+                if self.board[i][j] != goal_state[i][j]:
+                    cost += 1
+
+        return cost
+
+def astar(initial_state):
+    open_set = [initial_state]
+    closed_set = set()
+
+    while open_set:
+        current_state = heapq.heappop(open_set)
+
+        if current_state.board == [[1, 2, 3], [4, 5, 6], [7, 8, 0]]:
+            return current_state
+
+        closed_set.add(current_state)
+
+        for successor in current_state.generate_successors():
+            if successor not in closed_set:
+                heapq.heappush(open_set, successor)
+
+    return None
+
+def print_solution(solution_state):
+    path = []
+    while solution_state:
+        path.insert(0, (solution_state.move, solution_state.board))
+        solution_state = solution_state.parent
+
+    for move, state in path:
+        print(f"Move {move}:\n")
+        for row in state:
+            print(row)
+        print("\n")
+
+if __name__ == "__main__":
+    initial_board = []
+    print("Enter the initial state of the 8-Puzzle (use 0 for the blank space):")
+    for _ in range(3):
+        row = list(map(int, input().split()))
+        initial_board.append(row)
+
+    initial_state = PuzzleState(initial_board)
+    solution_state = astar(initial_state)
+
+    if solution_state:
+        print("Solution Found!\n")
+        print_solution(solution_state)
+    else:
+        print("No solution found.")
