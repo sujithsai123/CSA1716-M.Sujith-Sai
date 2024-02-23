@@ -1,3 +1,4 @@
+import numpy as np
 from collections import Counter
 import math
 
@@ -16,15 +17,15 @@ class DecisionTree:
 
     def information_gain(self, X, y, feature_index):
         total_entropy = self.entropy(y)
-        feature_values = set(x[feature_index] for x in X)
+        feature_values = set(X[:, feature_index])
         new_entropy = 0
         for value in feature_values:
-            subset_y = [label for label, feature_value in zip(y, X) if feature_value[feature_index] == value]
+            subset_y = y[X[:, feature_index] == value]
             new_entropy += (len(subset_y) / len(y)) * self.entropy(subset_y)
         return total_entropy - new_entropy
 
     def get_best_split(self, X, y):
-        num_features = len(X[0])
+        num_features = X.shape[1]
         best_feature = None
         best_information_gain = -1
         for i in range(num_features):
@@ -35,22 +36,25 @@ class DecisionTree:
         return best_feature
 
     def fit(self, X, y):
+        X = np.array(X)  # Convert to NumPy array
+        y = np.array(y)  # Convert to NumPy array
         self.tree = self._grow_tree(X, y)
 
     def _grow_tree(self, X, y):
         if len(set(y)) == 1:
             return {'class': y[0]}
-        if len(X[0]) == 0:
+        if X.shape[1] == 0:
             return {'class': Counter(y).most_common(1)[0][0]}
         best_feature = self.get_best_split(X, y)
-        feature_values = set(x[best_feature] for x in X)
+        feature_values = set(X[:, best_feature])
         node = {'feature': best_feature}
         for value in feature_values:
-            X_subset, y_subset = zip(*[(x, label) for x, label in zip(X, y) if x[best_feature] == value])
+            X_subset, y_subset = X[X[:, best_feature] == value], y[X[:, best_feature] == value]
             node[value] = self._grow_tree(X_subset, y_subset)
         return node
 
     def predict(self, X):
+        X = np.array(X)  # Convert to NumPy array
         return [self._predict_single(sample, self.tree) for sample in X]
 
     def _predict_single(self, sample, tree):
@@ -59,7 +63,7 @@ class DecisionTree:
         feature_value = sample[tree['feature']]
         if feature_value in tree:
             return self._predict_single(sample, tree[feature_value])
-        return Counter(y).most_common(1)[0][0]
+        return Counter(tree).most_common(1)[0][0]
 
 # Example usage:
 X_train = [
