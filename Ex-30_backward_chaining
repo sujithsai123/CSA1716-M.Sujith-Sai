@@ -1,0 +1,16 @@
+
+has_hair(dog).
+has_hair(cat).
+has_feathers(parrot).
+lays_eggs(snake).
+gives_milk(dog).
+gives_milk(cat).
+
+mammal(X) :- has_hair(X), gives_milk(X).
+bird(X) :- has_feathers(X), lays_eggs(X).
+
+
+is_mammal(X) :- mammal(X).
+is_mammal(X) :- has_hair(X), gives_milk(X).
+
+
